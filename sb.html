@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Clock</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800&display=swap'); /* Cool font */
+        
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: black;
+            overflow: hidden;
+        }
+
+        .date {
+            position: absolute;
+            top: 12%;
+            font-size: 5vw;
+            color: white;
+            text-shadow: 0 4px 6px rgba(0, 0, 0, 0.6);
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .day {
+            color: red; /* Day of the week in red */
+        }
+
+        .clock {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .digit {
+            font-size: 20vw;
+            font-weight: bold;
+            font-family: 'Nunito', sans-serif;
+            transform-origin: center;
+            position: relative;
+        }
+
+        .colon {
+            font-size: 18vw;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.8);
+            margin: -3vw;
+        }
+
+        /* Varying shades of blue for digits with final rotation applied */
+        .digit:first-child {
+            color: rgba(35, 127, 255, 0.9);
+            transform: rotate(-6deg);
+            left: 2vw;
+        }
+
+        .digit:nth-child(2) {
+            color: rgba(129, 184, 255, 0.9);
+            transform: rotate(2deg);
+            left: -1vw;
+        }
+
+        .digit:nth-child(4) {
+            color: rgba(35, 127, 255, 0.9);
+            transform: rotate(-4deg);
+            left: 0.5vw;
+        }
+
+        .digit:nth-child(5) {
+            color: rgba(129, 184, 255, 0.9);
+            transform: rotate(7deg);
+            left: -2vw;
+        }
+
+        .digit:nth-child(7) {
+            color: rgba(35, 127, 255, 0.9);
+            transform: rotate(-6deg);
+            left: 0.5vw;
+        }
+
+        .digit:last-child {
+            color: rgba(129, 184, 255, 0.9);
+            transform: rotate(-5deg);
+            left: -3vw;
+        }
+
+        @keyframes bounce {
+            0% {
+                transform: translateY(100%) rotate(var(--rotation));
+                opacity: 0;
+            }
+            50% {
+                transform: translateY(-10%) rotate(var(--rotation));
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(0%) rotate(var(--rotation));
+            }
+        }
+
+        .toggle-date-btn {
+            position: absolute;
+            top: 2%;
+            right: 2%;
+            width: 50px;
+            height: 50px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Invisible Date Toggle Button -->
+    <button class="toggle-date-btn" onclick="toggleDate()"></button>
+
+    <!-- Display Date -->
+    <div class="date" id="date"></div>
+
+    <!-- Clock Container -->
+    <div class="clock" id="clock">
+        <div class="digit" id="hourTens" style="--rotation: -6deg;">1</div>
+        <div class="digit" id="hourOnes" style="--rotation: 2deg;">2</div>
+        <div class="colon" id="colon1">:</div>
+        <div class="digit" id="minuteTens" style="--rotation: -4deg;">5</div>
+        <div class="digit" id="minuteOnes" style="--rotation: 7deg;">9</div>
+        <div class="colon" id="colon2">:</div>
+        <div class="digit" id="secondTens" style="--rotation: -6deg;">4</div>
+        <div class="digit" id="secondOnes" style="--rotation: -5deg;">8</div>
+    </div>
+
+    <script>
+        let previousTime = { hours: '', minutes: '', seconds: '' };
+
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            hours = hours % 12 || 12; // Convert to 12-hour format
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            // Format the date without the year
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            const formattedDate = now.toLocaleDateString('en-US', options);
+            document.getElementById('date').innerHTML = `<span class="day">${formattedDate.split(', ')[0]}</span>, ${formattedDate.split(', ').slice(1).join(', ')}`;
+
+            updateDigit('hourTens', String(hours).padStart(2, '0')[0], previousTime.hours[0]);
+            updateDigit('hourOnes', String(hours).padStart(2, '0')[1], previousTime.hours[1]);
+            updateDigit('minuteTens', minutes[0], previousTime.minutes[0]);
+            updateDigit('minuteOnes', minutes[1], previousTime.minutes[1]);
+            updateDigit('secondTens', seconds[0], previousTime.seconds[0]);
+            updateDigit('secondOnes', seconds[1], previousTime.seconds[1]);
+
+            previousTime = { hours: String(hours).padStart(2, '0'), minutes, seconds };
+        }
+
+        function updateDigit(elementId, newDigit, oldDigit) {
+            const element = document.getElementById(elementId);
+            if (newDigit !== oldDigit) {
+                element.textContent = newDigit;
+                element.style.animation = 'none';
+                void element.offsetWidth;
+                element.style.animation = 'bounce 0.6s ease-out';
+            }
+        }
+
+        function toggleDate() {
+            const dateElement = document.getElementById('date');
+            dateElement.style.display = dateElement.style.display === 'none' ? 'block' : 'none';
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>
