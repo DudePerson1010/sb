@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bouncing Clock</title>
+    <title>Switchable Clocks</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800&display=swap'); /* Cool font */
-        
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800&family=Roboto+Condensed:wght@700&display=swap'); /* Fonts */
+
         body {
             margin: 0;
             padding: 0;
@@ -19,6 +19,7 @@
             overflow: hidden;
         }
 
+        /* Main Clock (Cool Clock) */
         .date {
             position: absolute;
             top: 12%;
@@ -29,13 +30,14 @@
         }
 
         .day {
-            color: red; /* Day of the week in red */
+            color: red;
         }
 
         .clock {
             display: flex;
             align-items: center;
             position: relative;
+            z-index: 2;
         }
 
         .digit {
@@ -54,41 +56,54 @@
             margin-bottom: 20px;
         }
 
-        /* Varying shades of blue for digits with final rotation applied */
-        .digit:first-child {
-            color: rgba(35, 127, 255, 0.9);
-            transform: rotate(-6deg);
-            left: 2vw;
+        .digit:first-child { color: rgba(35, 127, 255, 0.9); transform: rotate(-6deg); left: 2vw; }
+        .digit:nth-child(2) { color: rgba(129, 184, 255, 0.9); transform: rotate(2deg); left: -1vw; }
+        .digit:nth-child(4) { color: rgba(35, 127, 255, 0.9); transform: rotate(-4deg); left: 0.5vw; }
+        .digit:nth-child(5) { color: rgba(129, 184, 255, 0.9); transform: rotate(7deg); left: -2vw; }
+        .digit:nth-child(7) { color: rgba(35, 127, 255, 0.9); transform: rotate(-6deg); left: 0.5vw; }
+        .digit:last-child { color: rgba(129, 184, 255, 0.9); transform: rotate(-5deg); left: -3vw; }
+
+        /* Simple Clock */
+        .simple-clock {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom right, black, #1a1a2e 70%, #313e8c);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
-        .digit:nth-child(2) {
-            color: rgba(129, 184, 255, 0.9);
-            transform: rotate(2deg);
-            left: -1vw;
+        .simple-clock.active {
+            opacity: 1;
+            visibility: visible;
         }
 
-        .digit:nth-child(4) {
-            color: rgba(35, 127, 255, 0.9);
-            transform: rotate(-4deg);
-            left: 0.5vw;
+        .simple-clock .time {
+            font-size: 20vw;
+            font-weight: bold;
+            font-family: 'Roboto Condensed', sans-serif;
+            color: rgba(255, 255, 255, 0.6); /* Bright white */
+
         }
 
-        .digit:nth-child(5) {
-            color: rgba(129, 184, 255, 0.9);
-            transform: rotate(7deg);
-            left: -2vw;
-        }
-
-        .digit:nth-child(7) {
-            color: rgba(35, 127, 255, 0.9);
-            transform: rotate(-6deg);
-            left: 0.5vw;
-        }
-
-        .digit:last-child {
-            color: rgba(129, 184, 255, 0.9);
-            transform: rotate(-5deg);
-            left: -3vw;
+        /* Invisible Button */
+        .toggle-clock-btn {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 30%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            z-index: 15;
         }
 
         @keyframes bounce {
@@ -104,27 +119,16 @@
                 transform: translateY(0%) rotate(var(--rotation));
             }
         }
-
-        .toggle-date-btn {
-            position: absolute;
-            top: 2%;
-            right: 2%;
-            width: 200px;
-            height: 200px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
-    <!-- Invisible Date Toggle Button -->
-    <button class="toggle-date-btn" onclick="toggleDate()"></button>
+    <!-- Invisible Toggle Button -->
+    <button class="toggle-clock-btn" onclick="toggleClockMode()"></button>
 
     <!-- Display Date -->
     <div class="date" id="date"></div>
 
-    <!-- Clock Container -->
+    <!-- Main Clock -->
     <div class="clock" id="clock">
         <div class="digit" id="hourTens" style="--rotation: -6deg;">1</div>
         <div class="digit" id="hourOnes" style="--rotation: 2deg;">2</div>
@@ -134,6 +138,11 @@
         <div class="colon" id="colon2">:</div>
         <div class="digit" id="secondTens" style="--rotation: -6deg;">4</div>
         <div class="digit" id="secondOnes" style="--rotation: -5deg;">8</div>
+    </div>
+
+    <!-- Simple Clock -->
+    <div class="simple-clock" id="simpleClock">
+        <div class="time" id="simpleTime">8:38</div>
     </div>
 
     <script>
@@ -146,17 +155,16 @@
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
 
-            // Format the date without the year
-            const options = { weekday: 'long', month: 'long', day: 'numeric' };
-            const formattedDate = now.toLocaleDateString('en-US', options);
-            document.getElementById('date').innerHTML = `<span class="day">${formattedDate.split(', ')[0]}</span>, ${formattedDate.split(', ').slice(1).join(', ')}`;
-
+            // Update main clock
             updateDigit('hourTens', String(hours).padStart(2, '0')[0], previousTime.hours[0]);
             updateDigit('hourOnes', String(hours).padStart(2, '0')[1], previousTime.hours[1]);
             updateDigit('minuteTens', minutes[0], previousTime.minutes[0]);
             updateDigit('minuteOnes', minutes[1], previousTime.minutes[1]);
             updateDigit('secondTens', seconds[0], previousTime.seconds[0]);
             updateDigit('secondOnes', seconds[1], previousTime.seconds[1]);
+
+            // Update simple clock
+            document.getElementById('simpleTime').textContent = `${hours}:${minutes}`;
 
             previousTime = { hours: String(hours).padStart(2, '0'), minutes, seconds };
         }
@@ -171,9 +179,20 @@
             }
         }
 
-        function toggleDate() {
-            const dateElement = document.getElementById('date');
-            dateElement.style.display = dateElement.style.display === 'none' ? 'block' : 'none';
+        function toggleClockMode() {
+            const simpleClock = document.getElementById('simpleClock');
+            const mainClock = document.getElementById('clock');
+            const date = document.getElementById('date');
+
+            if (simpleClock.classList.contains('active')) {
+                simpleClock.classList.remove('active');
+                mainClock.style.opacity = 1;
+                date.style.display = 'block';
+            } else {
+                simpleClock.classList.add('active');
+                mainClock.style.opacity = 0;
+                date.style.display = 'none';
+            }
         }
 
         setInterval(updateClock, 1000);
