@@ -3,27 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Switchable Clocks</title>
+    <title>Cool Clock with Calculator</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800&family=Roboto+Condensed:wght@700&display=swap'); /* Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@800&family=Roboto+Condensed:wght@700&display=swap');
 
         body {
             margin: 0;
             padding: 0;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             background-color: black;
             overflow: hidden;
+            font-family: 'Nunito', sans-serif;
         }
 
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            color: white;
+            text-align: center;
+            position: absolute;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Cool Clock Design */
         .clock {
             display: flex;
             align-items: center;
             position: relative;
-            z-index: 2;
         }
 
         .digit {
@@ -42,54 +57,6 @@
             margin-bottom: 20px;
         }
 
-        .digit:first-child { color: rgba(35, 127, 255, 0.9); transform: rotate(-6deg); left: 2vw; }
-        .digit:nth-child(2) { color: rgba(129, 184, 255, 0.9); transform: rotate(2deg); left: -1vw; }
-        .digit:nth-child(4) { color: rgba(35, 127, 255, 0.9); transform: rotate(-4deg); left: 0.5vw; }
-        .digit:nth-child(5) { color: rgba(129, 184, 255, 0.9); transform: rotate(7deg); left: -2vw; }
-
-        /* Simple Clock */
-        .simple-clock {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at bottom center, rgba(33, 200, 255, 0.3), rgb(0, 0, 0));
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .simple-clock.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .simple-clock .time {
-            font-size: 10vw; /* Make the font larger for more spacing */
-            font-weight: bold;
-            font-family: 'Roboto Condensed', sans-serif;
-            color: rgba(255, 255, 255, 0.6); /* Bright white */
-            letter-spacing: 0.1em; /* Add space between the characters */
-        }
-
-        /* Invisible Button */
-        .toggle-clock-btn {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 30%;
-            height: 100%;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            z-index: 15;
-        }
-
         @keyframes bounce {
             0% {
                 transform: translateY(100%) rotate(var(--rotation));
@@ -103,48 +70,171 @@
                 transform: translateY(0%) rotate(var(--rotation));
             }
         }
+
+        .digit:first-child { color: rgba(35, 127, 255, 0.9); transform: rotate(-6deg); left: 2vw; }
+        .digit:nth-child(2) { color: rgba(129, 184, 255, 0.9); transform: rotate(2deg); left: -1vw; }
+        .digit:nth-child(4) { color: rgba(35, 127, 255, 0.9); transform: rotate(-4deg); left: 0.5vw; }
+        .digit:nth-child(5) { color: rgba(129, 184, 255, 0.9); transform: rotate(7deg); left: -2vw; }
+
+        /* Calculator Screen */
+        .calculator {
+            flex-direction: column;
+            width: 90%;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8); /* Semi-transparent black background */
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .calculator label {
+            margin: 10px;
+            font-size: 1.5em;
+        }
+
+        .calculator input {
+            width: 150px;
+            text-align: center;
+            margin-left: 10px;
+            margin-right: 10px;
+            font-size: 1.5em;
+        }
+
+        .calculator .output {
+            margin-top: 20px;
+            font-size: 1.8em;
+        }
+
+        .toggle-button {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .back-button {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 150px;
+            height: 50px;
+            background-color: red;
+            color: white;
+            font-size: 1.5em;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
     </style>
 </head>
 <body>
-    <!-- Invisible Toggle Button -->
-    <button class="toggle-clock-btn" onclick="toggleClockMode()"></button>
-
-    <!-- Display Date -->
-    <div class="date" id="date"></div>
-
-    <!-- Main Clock -->
-    <div class="clock" id="clock">
-        <div class="digit" id="hourTens" style="--rotation: -6deg;">1</div>
-        <div class="digit" id="hourOnes" style="--rotation: 2deg;">2</div>
-        <div class="colon" id="colon1">:</div>
-        <div class="digit" id="minuteTens" style="--rotation: -4deg;">5</div>
-        <div class="digit" id="minuteOnes" style="--rotation: 7deg;">9</div>
+    <!-- Clock Screen -->
+    <div class="screen clock active" id="clockScreen">
+        <div class="clock">
+            <div class="digit" id="hourTens">1</div>
+            <div class="digit" id="hourOnes">2</div>
+            <div class="colon">:</div>
+            <div class="digit" id="minuteTens">5</div>
+            <div class="digit" id="minuteOnes">9</div>
+        </div>
+        <button class="toggle-button" onclick="toggleScreen()"></button>
     </div>
 
-    <!-- Simple Clock -->
-    <div class="simple-clock" id="simpleClock">
-        <div class="time" id="simpleTime">8:38</div>
+    <!-- Calculator Screen -->
+    <div class="screen calculator" id="calculatorScreen">
+        <div class="calculator">
+            <label>
+                Start Time:
+                <input id="startHours" type="number" min="0" placeholder="HH">
+                :
+                <input id="startMinutes" type="number" min="0" max="59" placeholder="MM">
+            </label>
+            <label>
+                End Time:
+                <input id="endHours" type="number" min="0" placeholder="HH">
+                :
+                <input id="endMinutes" type="number" min="0" max="59" placeholder="MM">
+            </label>
+            <label>
+                Playback Speed:
+                <input id="playbackSpeed" type="number" min="0.25" max="2" step="0.05" value="1">
+            </label>
+            <div class="output" id="output">Adjusted Length: 0 hours and 0 minutes</div>
+        </div>
+        <button class="back-button" onclick="toggleScreen()">Back</button>
     </div>
 
     <script>
-        let previousTime = { hours: '', minutes: '' };
+        let toggleEnabled = true;
+
+        function toggleScreen() {
+            const clockScreen = document.getElementById('clockScreen');
+            const calculatorScreen = document.getElementById('calculatorScreen');
+            const toggleButton = document.querySelector('.toggle-button');
+
+            if (clockScreen.classList.contains('active')) {
+                clockScreen.classList.remove('active');
+                calculatorScreen.classList.add('active');
+                toggleButton.style.pointerEvents = 'none';
+            } else {
+                calculatorScreen.classList.remove('active');
+                clockScreen.classList.add('active');
+                toggleButton.style.pointerEvents = 'auto';
+            }
+        }
+
+        function calculateLength() {
+            const startHours = parseInt(document.getElementById('startHours').value) || 0;
+            const startMinutes = parseInt(document.getElementById('startMinutes').value) || 0;
+            const endHours = parseInt(document.getElementById('endHours').value) || 0;
+            const endMinutes = parseInt(document.getElementById('endMinutes').value) || 0;
+            const playbackSpeed = parseFloat(document.getElementById('playbackSpeed').value) || 1;
+
+            const startTime = startHours * 3600 + startMinutes * 60;
+            const endTime = endHours * 3600 + endMinutes * 60;
+            const adjustedLengthInSeconds = ((endTime - startTime) / playbackSpeed).toFixed(2);
+
+            const adjustedHours = Math.floor(adjustedLengthInSeconds / 3600);
+            const adjustedMinutes = Math.floor((adjustedLengthInSeconds % 3600) / 60);
+
+            const output = document.getElementById('output');
+            if (endTime <= startTime || playbackSpeed <= 0) {
+                output.textContent = "Invalid input!";
+            } else {
+                output.textContent = `Adjusted Length: ${adjustedHours} hours and ${adjustedMinutes} minutes`;
+            }
+        }
+
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', calculateLength);
+        });
 
         function updateClock() {
             const now = new Date();
             let hours = now.getHours();
-            hours = hours % 12 || 12; // Convert to 12-hour format
+            hours = hours % 12 || 12;
             const minutes = String(now.getMinutes()).padStart(2, '0');
 
-            // Update main clock (removed seconds)
-            updateDigit('hourTens', String(hours).padStart(2, '0')[0], previousTime.hours[0]);
-            updateDigit('hourOnes', String(hours).padStart(2, '0')[1], previousTime.hours[1]);
-            updateDigit('minuteTens', minutes[0], previousTime.minutes[0]);
-            updateDigit('minuteOnes', minutes[1], previousTime.minutes[1]);
+            const hourTens = document.getElementById('hourTens');
+            const hourOnes = document.getElementById('hourOnes');
+            const minuteTens = document.getElementById('minuteTens');
+            const minuteOnes = document.getElementById('minuteOnes');
 
-            // Update simple clock
-            document.getElementById('simpleTime').textContent = `${hours}:${minutes}`;
+            // Update the digits for the clock
+            const newHourTens = String(hours).padStart(2, '0')[0];
+            const newHourOnes = String(hours).padStart(2, '0')[1];
+            const newMinuteTens = minutes[0];
+            const newMinuteOnes = minutes[1];
 
-            previousTime = { hours: String(hours).padStart(2, '0'), minutes };
+            updateDigit('hourTens', newHourTens, hourTens.textContent);
+            updateDigit('hourOnes', newHourOnes, hourOnes.textContent);
+            updateDigit('minuteTens', newMinuteTens, minuteTens.textContent);
+            updateDigit('minuteOnes', newMinuteOnes, minuteOnes.textContent);
         }
 
         function updateDigit(elementId, newDigit, oldDigit) {
@@ -153,27 +243,11 @@
                 element.textContent = newDigit;
                 element.style.animation = 'none';
                 void element.offsetWidth;
-                element.style.animation = 'bounce 0.6s ease-out';
+                element.style.animation = 'bounce 0.8s ease-out';
             }
         }
-
-        function toggleClockMode() {
-            const simpleClock = document.getElementById('simpleClock');
-            const mainClock = document.getElementById('clock');
-            const date = document.getElementById('date');
-
-            if (simpleClock.classList.contains('active')) {
-                simpleClock.classList.remove('active');
-                mainClock.style.opacity = 1;
-                date.style.display = 'block';
-            } else {
-                simpleClock.classList.add('active');
-                mainClock.style.opacity = 0;
-                date.style.display = 'none';
-            }
-        }
-
-        setInterval(updateClock, 1000);
+        
+        setInterval(updateClock, 1000); // Update every second
         updateClock();
     </script>
 </body>
